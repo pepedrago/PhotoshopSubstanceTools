@@ -22,19 +22,21 @@ var OutputSize = []
 
 
 var stbUI = new Window("dialog","Substance Texture Baker");
-
+stbUI.alignChildren = "right";
 
 
 // select a mesh to bake
 var fileSelectGroup = stbUI.add("panel",undefined,"Select Mesh");
+fileSelectGroup.preferredSize = [180,-1];
 MeshSelectButton = fileSelectGroup.add("Button",undefined,MeshName);
 MeshSelectButton.addEventListener("click",SelectMesh);
-var RenderByIDCheck = fileSelectGroup.add("checkbox",undefined,"Use filename as ID");
+var RenderByIDCheck = fileSelectGroup.add("checkbox",undefined,"Selection by filename");
 RenderByIDCheck.value = false;
-fileSelectGroup.alignChildren = "left";
+fileSelectGroup.alignChildren = "center";
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-var baseMapGroup = stbUI.add("panel");
+var baseMapGroup = stbUI.add("panel",undefined,"Base Maps");
 baseMapGroup.alignChildren = "left";
+baseMapGroup.preferredSize = [180,-1];
 var aoCheck = baseMapGroup.add("checkbox",undefined,"AO");
 aoCheck.value = true;
 var curvatureCheck = baseMapGroup.add("checkbox",undefined,"Curvature");
@@ -45,13 +47,24 @@ var wNormalsCheck = baseMapGroup.add("checkbox",undefined,"WS Normals");
 wNormalsCheck.value = true;
 var positionCheck = baseMapGroup.add("checkbox",undefined,"Position");
 positionCheck.value = true;
-var colorMapGroup = stbUI.add("panel");
+
+var colorMapGroup = stbUI.add("panel",undefined,"Color/Masks");
+colorMapGroup.preferredSize = [180,-1];
 var colorMCheck = colorMapGroup.add("checkbox",undefined,"ColorMask");
 positionCheck.value = true;
 var colorMaskCheck = colorMapGroup.add("checkbox",undefined,"ColorMask");
 colorMaskCheck.value = false;
+
 var checkAll = stbUI.add("checkbox",undefined,"Check all");
 var SubstanceFiles= stbUI.add("listbox",undefined,["One","Two","Three"],{multiselect:true});
+
+var optionsGroup = stbUI.add("panel",undefined,"Options");
+optionsGroup.orientation="row";
+optionsGroup.preferredSize = [180,-1];
+var placeInFileCheck = optionsGroup.add("checkbox",undefined,"Place in file");
+placeInFileCheck.value = true;
+var lowQualityCheck = optionsGroup.add("checkbox",undefined,"Low Quality");
+lowQualityCheck.value = false;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 stbUI.addEventListener("click",function(event){
 
@@ -100,12 +113,14 @@ function SelectMesh(){
     }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function CreatePlaceholder(_outputPathFS,_name)
-{
-   
-    var _placeholder = app.documents.add(activeDoc.width,activeDoc.height,72,_name, NewDocumentMode.RGB);
+{ 
+    var _newDocSize= (lowQualityCheck.value==true)?[activeDoc.width/4,activeDoc.height/4]:[activeDoc.width,activeDoc.height];
+    var _placeholder = app.documents.add(_newDocSize[0],_newDocSize[1],72,_name, NewDocumentMode.RGB);
     SavePNG(_placeholder,outputPath); 
-    PlaceLinkedSmartObject(_outputPathFS+"\\"+_name);
-   
+    if(placeInFileCheck.value==true)
+    {
+         PlaceLinkedSmartObject(_outputPathFS+"\\"+_name);
+    }
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function GetBakeDimensions()
@@ -114,7 +129,7 @@ function GetBakeDimensions()
       {
           
         var _dimensions = (i==0)?activeDoc.width:activeDoc.height;
-        
+       
         switch(_dimensions)
         {
                case 512:
@@ -133,7 +148,9 @@ function GetBakeDimensions()
                alert("The Document Size has to be between 512² and 4096²");
                break;
         }
+ 
       }
+
  }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -151,9 +168,13 @@ function CreateCommands()
     
     if(RenderByIDCheck.value == true){
         _inputSelection = " --input-selection "+ " \""+_MeshName+"\"";
-        alert(_inputSelection);
-        //_inputSelection = _MeshName;
     }
+    
+   if(lowQualityCheck.value==true)
+    {
+         OutputSize[0] -=2;
+         OutputSize[1] -=2;
+    };
     
     for(var i=0;i<baseMapGroup.children.length;i++)
     {
@@ -167,19 +188,19 @@ function CreateCommands()
             break;
             case  curvatureCheck:
             CreatePlaceholder(_outputPath,_MeshName+"_curvature.png")
-            Commands.push(batchtoolsPath+"sbsbaker.exe\" curvature"+ " \"" +_filePath+ "\" " + " --output-size "+ OutputSize[0]+","+OutputSize[1]+" --input-selection \"object\" --output-path "+_outputPath);
+            Commands.push(batchtoolsPath+"sbsbaker.exe\" curvature"+ " \"" +_filePath+ "\" " + " --output-size "+ OutputSize[0]+","+OutputSize[1]+_inputSelection+" --output-path "+_outputPath);
             break;
             case  normalCheck:
             CreatePlaceholder(_outputPath,_MeshName+"_normal-from-mesh.png")
-            Commands.push(batchtoolsPath+"sbsbaker.exe\" normal-from-mesh"+ " \"" +_filePath+ "\" " + "--highdef-mesh "+ _filePath + " --output-size "+ OutputSize[0]+","+OutputSize[1]+" --input-selection \"object\" --output-path "+_outputPath);
+            Commands.push(batchtoolsPath+"sbsbaker.exe\" normal-from-mesh"+ " \"" +_filePath+ "\" " + "--highdef-mesh "+ _filePath + " --output-size "+ OutputSize[0]+","+OutputSize[1]+_inputSelection+" --output-path "+_outputPath);
             break;
             case  wNormalsCheck:
             CreatePlaceholder(_outputPath,_MeshName+"_normal-world-space.png")
-            Commands.push(batchtoolsPath+"sbsbaker.exe\" normal-world-space"+ " \"" +_filePath+ "\" " + " --output-size "+ OutputSize[0]+","+OutputSize[1]+" --input-selection \"object\" --output-path "+_outputPath);
+            Commands.push(batchtoolsPath+"sbsbaker.exe\" normal-world-space"+ " \"" +_filePath+ "\" " + " --output-size "+ OutputSize[0]+","+OutputSize[1]+_inputSelection+" --output-path "+_outputPath);
             break;
             case  positionCheck:
             CreatePlaceholder(_outputPath,_MeshName+"_position-from-mesh.png")
-            Commands.push(batchtoolsPath+"sbsbaker.exe\" position-from-mesh"+ " \"" +_filePath+ "\" " + "--highdef-mesh "+ _filePath + " --output-size "+ OutputSize[0]+","+OutputSize[1]+" --input-selection \"object\" --output-path "+_outputPath);
+            Commands.push(batchtoolsPath+"sbsbaker.exe\" position-from-mesh"+ " \"" +_filePath+ "\" " + "--highdef-mesh "+ _filePath + " --output-size "+ OutputSize[0]+","+OutputSize[1]+_inputSelection+" --output-path "+_outputPath);
             break;
         }     
   }
@@ -258,6 +279,13 @@ var idPlc = charIDToTypeID( "Plc " );
         desc50.putUnitDouble( idVrtc, idPxl, 0.000000 );
     var idOfst = charIDToTypeID( "Ofst" );
     desc49.putObject( idOfst, idOfst, desc50 );
-    executeAction( idPlc, desc49, DialogModes.NO );    
+    executeAction( idPlc, desc49, DialogModes.NO ); 
+    
+    if(lowQualityCheck.value==true)
+    {
+        var layer = activeDoc.activeLayer;  
+        layer.translate(new UnitValue(0-layer.bounds[0].as('px'),'px'), new UnitValue(0-layer.bounds[1].as('px'),'px'));  
+        layer.resize((activeDoc.width.value/(layer.bounds[2]-layer.bounds[0]))*100,(activeDoc.height.value/(layer.bounds[3]-layer.bounds[1]))*100,AnchorPosition.TOPLEFT);  
+     }
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

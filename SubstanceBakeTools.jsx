@@ -1,8 +1,17 @@
 ﻿var rersourcesPath =  "\"C:\\Program Files\\Allegorithmic\\Substance Designer\\resources\\packages\"";
 var batchtoolsPath =    "\"C:\\Program Files\\Allegorithmic\\Substance Automation Toolkit\\";
+var docPath;
+var activeDoc;
+try
+{
+    docPath = app.activeDocument.path;
+    activeDoc = app.activeDocument;
+}
+catch(e)
+{
+    alert("You need to have a saved document opened");
+}
 
-var activeDoc = app.activeDocument;
-var docPath = app.activeDocument.path;
 var outputPath;
 var BatchFile;
 
@@ -71,6 +80,11 @@ function Init()
 }
 function Main()
 {
+    if(Mesh==null)
+    {
+        alert("No Mesh selected");
+        return;
+    }
     CreateCommands();
     WriteBat(Commands);
     ExecuteBat();
@@ -81,6 +95,15 @@ function SelectMesh(){
     if(Mesh!=null) MeshSelectButton.text = Mesh.name;
     
     }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function CreatePlaceholder(_outputPathFS,_name)
+{
+   
+    var _placeholder = app.documents.add(activeDoc.width,activeDoc.height,72,_name, NewDocumentMode.RGB);
+    SavePNG(_placeholder,outputPath); 
+    PlaceLinkedSmartObject(_outputPathFS+"\\"+_name);
+   
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function GetBakeDimensions()
 {
@@ -119,25 +142,32 @@ function CreateCommands()
     // file path needs to be formatted, decodeURI does the job
     var _filePath =decodeURI(Mesh.fsName);
     var _outputPath = decodeURI(outputPath.fsName);
+
+    var _MeshName = Mesh.name.split(".FBX")[0];
     for(var i=0;i<baseMapGroup.children.length;i++)
     {
         if(baseMapGroup.children[i].value!=true)continue;
        
         switch(baseMapGroup.children[i])
         {
-            case aoCheck:        
+            case aoCheck: 
+            CreatePlaceholder(_outputPath,_MeshName+"_ambient-occlusion-from-mesh.png")
             Commands.push(batchtoolsPath+"sbsbaker.exe\" ambient-occlusion-from-mesh"+ " \"" +_filePath+ "\" " + " --output-size "+ OutputSize[0]+","+OutputSize[1]+" --input-selection \"object\" --output-path "+_outputPath);
             break;
             case  curvatureCheck:
+            CreatePlaceholder(_outputPath,_MeshName+"_curvature.png")
             Commands.push(batchtoolsPath+"sbsbaker.exe\" curvature"+ " \"" +_filePath+ "\" " + " --output-size "+ OutputSize[0]+","+OutputSize[1]+" --input-selection \"object\" --output-path "+_outputPath);
             break;
             case  normalCheck:
+            CreatePlaceholder(_outputPath,_MeshName+"_normal-from-mesh.png")
             Commands.push(batchtoolsPath+"sbsbaker.exe\" normal-from-mesh"+ " \"" +_filePath+ "\" " + "--highdef-mesh "+ _filePath + " --output-size "+ OutputSize[0]+","+OutputSize[1]+" --input-selection \"object\" --output-path "+_outputPath);
             break;
             case  wNormalsCheck:
+            CreatePlaceholder(_outputPath,_MeshName+"_normal-world-space.png")
             Commands.push(batchtoolsPath+"sbsbaker.exe\" normal-world-space"+ " \"" +_filePath+ "\" " + " --output-size "+ OutputSize[0]+","+OutputSize[1]+" --input-selection \"object\" --output-path "+_outputPath);
             break;
             case  positionCheck:
+            CreatePlaceholder(_outputPath,_MeshName+"_position-from-mesh.png")
             Commands.push(batchtoolsPath+"sbsbaker.exe\" position-from-mesh"+ " \"" +_filePath+ "\" " + "--highdef-mesh "+ _filePath + " --output-size "+ OutputSize[0]+","+OutputSize[1]+" --input-selection \"object\" --output-path "+_outputPath);
             break;
         }     
@@ -160,7 +190,7 @@ function WriteBat(_commands)
     BatchFile.encoding = "UTF8";
     BatchFile.open("w");
     for each(var _command in _commands){
-         alert(_command);
+         //alert(_command);
         BatchFile.writeln(_command);
         }
    
@@ -180,4 +210,43 @@ function CreateTempFolder(path) {
   }
   return folder;
 }  
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function SavePNG(_file,_path){
+    var pngOpts = new ExportOptionsSaveForWeb; 
+    pngOpts.format = SaveDocumentType.PNG
+    pngOpts.PNG8 = false; 
+    pngOpts.transparency = true; 
+    pngOpts.interlaced = false; 
+    pngOpts.quality = 100;
+    _file.exportDocument(new File(_path),ExportType.SAVEFORWEB,pngOpts); 
+  
+     _file.close(SaveOptions.DONOTSAVECHANGES);  
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function PlaceLinkedSmartObject(_fileToPlace)
+{
+var idPlc = charIDToTypeID( "Plc " );
+    var desc49 = new ActionDescriptor();
+    var idIdnt = charIDToTypeID( "Idnt" );
+    desc49.putInteger( idIdnt, 14 );
+    var idnull = charIDToTypeID( "null" );
+    desc49.putPath( idnull, new File( _fileToPlace ) );
+    var idLnkd = charIDToTypeID( "Lnkd" );
+    desc49.putBoolean( idLnkd, true );
+    var idFTcs = charIDToTypeID( "FTcs" );
+    var idQCSt = charIDToTypeID( "QCSt" );
+    var idQcsa = charIDToTypeID( "Qcsa" );
+    desc49.putEnumerated( idFTcs, idQCSt, idQcsa );
+    var idOfst = charIDToTypeID( "Ofst" );
+        var desc50 = new ActionDescriptor();
+        var idHrzn = charIDToTypeID( "Hrzn" );
+        var idPxl = charIDToTypeID( "#Pxl" );
+        desc50.putUnitDouble( idHrzn, idPxl, 0.000000 );
+        var idVrtc = charIDToTypeID( "Vrtc" );
+        var idPxl = charIDToTypeID( "#Pxl" );
+        desc50.putUnitDouble( idVrtc, idPxl, 0.000000 );
+    var idOfst = charIDToTypeID( "Ofst" );
+    desc49.putObject( idOfst, idOfst, desc50 );
+    executeAction( idPlc, desc49, DialogModes.NO );    
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -22,13 +22,16 @@ var OutputSize = []
 
 
 var stbUI = new Window("dialog","Substance Texture Baker");
-var myMessage = stbUI.add("statictext",undefined,"HelloWorld!");
-var myText = stbUI.add("edittext",undefined,"1");
+
+
 
 // select a mesh to bake
 var fileSelectGroup = stbUI.add("panel",undefined,"Select Mesh");
 MeshSelectButton = fileSelectGroup.add("Button",undefined,MeshName);
 MeshSelectButton.addEventListener("click",SelectMesh);
+var RenderByIDCheck = fileSelectGroup.add("checkbox",undefined,"Use filename as ID");
+RenderByIDCheck.value = false;
+fileSelectGroup.alignChildren = "left";
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 var baseMapGroup = stbUI.add("panel");
 baseMapGroup.alignChildren = "left";
@@ -142,8 +145,16 @@ function CreateCommands()
     // file path needs to be formatted, decodeURI does the job
     var _filePath =decodeURI(Mesh.fsName);
     var _outputPath = decodeURI(outputPath.fsName);
-
     var _MeshName = Mesh.name.split(".FBX")[0];
+    var _inputSelection = "";
+    
+    
+    if(RenderByIDCheck.value == true){
+        _inputSelection = " --input-selection "+ " \""+_MeshName+"\"";
+        alert(_inputSelection);
+        //_inputSelection = _MeshName;
+    }
+    
     for(var i=0;i<baseMapGroup.children.length;i++)
     {
         if(baseMapGroup.children[i].value!=true)continue;
@@ -152,7 +163,7 @@ function CreateCommands()
         {
             case aoCheck: 
             CreatePlaceholder(_outputPath,_MeshName+"_ambient-occlusion-from-mesh.png")
-            Commands.push(batchtoolsPath+"sbsbaker.exe\" ambient-occlusion-from-mesh"+ " \"" +_filePath+ "\" " + " --output-size "+ OutputSize[0]+","+OutputSize[1]+" --input-selection \"object\" --output-path "+_outputPath);
+            Commands.push(batchtoolsPath+"sbsbaker.exe\" ambient-occlusion-from-mesh"+ " \"" +_filePath+ "\" " + " --output-size "+ OutputSize[0]+","+OutputSize[1]+_inputSelection+" --output-path "+_outputPath);
             break;
             case  curvatureCheck:
             CreatePlaceholder(_outputPath,_MeshName+"_curvature.png")

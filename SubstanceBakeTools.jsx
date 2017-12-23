@@ -1,4 +1,4 @@
-﻿var rersourcesPath =  "\"C:\\Program Files\\Allegorithmic\\Substance Designer\\resources\\packages\"";
+﻿var resourcesPath =  "\"C:\\Program Files\\Allegorithmic\\Substance Designer\\resources\\packages\"";
 var batchtoolsPath =    "\"C:\\Program Files\\Allegorithmic\\Substance Automation Toolkit\\";
 var docPath;
 var activeDoc;
@@ -41,30 +41,39 @@ var aoCheck = baseMapGroup.add("checkbox",undefined,"AO");
 aoCheck.value = true;
 var curvatureCheck = baseMapGroup.add("checkbox",undefined,"Curvature");
 curvatureCheck.value = true;
-var normalCheck = baseMapGroup.add("checkbox",undefined,"Normal");
-normalCheck.value = false;
 var wNormalsCheck = baseMapGroup.add("checkbox",undefined,"WS Normals");
 wNormalsCheck.value = true;
 var positionCheck = baseMapGroup.add("checkbox",undefined,"Position");
 positionCheck.value = true;
-
-var colorMapGroup = stbUI.add("panel",undefined,"Color/Masks");
+var checkAll = stbUI.add("checkbox",undefined,"Check all");
+var colorMapGroup = stbUI.add("panel",undefined,"Other");
+colorMapGroup.alignChildren = "left";
 colorMapGroup.preferredSize = [180,-1];
 var colorMCheck = colorMapGroup.add("checkbox",undefined,"ColorMask");
 positionCheck.value = true;
-var colorMaskCheck = colorMapGroup.add("checkbox",undefined,"ColorMask");
-colorMaskCheck.value = false;
 
-var checkAll = stbUI.add("checkbox",undefined,"Check all");
-var SubstanceFiles= stbUI.add("listbox",undefined,["One","Two","Three"],{multiselect:true});
+
+var effectsMapGroup = stbUI.add("panel",undefined,"Effects");
+effectsMapGroup.alignChildren = "left";
+effectsMapGroup.preferredSize = [180,-1];
+var triplanarCheck = effectsMapGroup.add("checkbox",undefined,"Triplanar");
+var leaksCheck = effectsMapGroup.add("checkbox",undefined,"Leaks");
+var edgesCheck = effectsMapGroup.add("checkbox",undefined,"Edges");
 
 var optionsGroup = stbUI.add("panel",undefined,"Options");
-optionsGroup.orientation="row";
+
+optionsGroup.orientation="column";
+optionsGroup.graphics.font = " Segoe UI:10";
+optionsGroup.alignChildren = "left";
 optionsGroup.preferredSize = [180,-1];
 var placeInFileCheck = optionsGroup.add("checkbox",undefined,"Place in file");
+
 placeInFileCheck.value = true;
-var lowQualityCheck = optionsGroup.add("checkbox",undefined,"Low Quality");
+var lowQualityCheck = optionsGroup.add("checkbox",undefined,"Preview");
+
 lowQualityCheck.value = false;
+substancePathButton = optionsGroup.add("Button",undefined,"Set Batch Tool Path");
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 stbUI.addEventListener("click",function(event){
 
@@ -189,10 +198,6 @@ function CreateCommands()
             case  curvatureCheck:
             CreatePlaceholder(_outputPath,_MeshName+"_curvature.png")
             Commands.push(batchtoolsPath+"sbsbaker.exe\" curvature"+ " \"" +_filePath+ "\" " + " --output-size "+ OutputSize[0]+","+OutputSize[1]+_inputSelection+" --output-path "+_outputPath);
-            break;
-            case  normalCheck:
-            CreatePlaceholder(_outputPath,_MeshName+"_normal-from-mesh.png")
-            Commands.push(batchtoolsPath+"sbsbaker.exe\" normal-from-mesh"+ " \"" +_filePath+ "\" " + "--highdef-mesh "+ _filePath + " --output-size "+ OutputSize[0]+","+OutputSize[1]+_inputSelection+" --output-path "+_outputPath);
             break;
             case  wNormalsCheck:
             CreatePlaceholder(_outputPath,_MeshName+"_normal-world-space.png")
